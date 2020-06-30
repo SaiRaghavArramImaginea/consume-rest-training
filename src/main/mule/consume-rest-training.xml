@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="3a059033-91ea-4bce-a558-b8f556e5ce0f" >
+		<http:listener-connection host="0.0.0.0" port="8083" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="d99f4ba6-572b-4c9b-9015-6eb0036b15aa" >
+		<http:request-connection host="reqres.in" port="80" />
+	</http:request-config>
+	<flow name="consume-rest-trainingFlow" doc:id="0097ef23-4a5d-450d-b1e9-4b05b2f27dc0" >
+		<http:listener doc:name="Listener" doc:id="76f4943c-8f59-4090-b8bf-35b6bfd5e636" config-ref="HTTP_Listener_config" path="/users"/>
+		<set-variable value="#[payload.id]" doc:name="Set Variable" doc:id="1cd65643-b2ef-4538-9f9e-b3a91e3b37ab" variableName="userId"/>
+		<logger level="INFO" doc:name="Logger" doc:id="28193a9d-c6b7-4142-a7da-143d9439403f" message="#[payload]"/>
+		<http:request method="GET" doc:name="Request" doc:id="46076e79-fba6-42c6-ad30-fb2681a18153" config-ref="HTTP_Request_configuration" path='#["/api/users/" ++ vars.userId as String]'/>
+		<ee:transform doc:name="Transform Message" doc:id="0a2374ef-090c-45ab-a14a-bd99f7841815">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	statusCode : message.attributes.statusCode,
+	reasonphrase: message.attributes.reasonPhrase,
+	body : payload
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
